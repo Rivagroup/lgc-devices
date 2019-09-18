@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Rolltore RESTful</title>
+		<meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=no">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+		<script>
+			$(document).ready(function() {
+			
+				var restCall = function(ip, command){
+					/*$.ajax({
+						url: "http://" + ip + "/" + command
+					}).then(function(data) {
+						console.log(data);
+						return data;
+					});*/
+					var jqxhr = $.get( "http://" + ip + "/" + command, function(data) {
+						console.log( "http://" + ip + "/" + command + ": success" );
+						console.log("data", data);
+					}).done(function(data) {
+						console.log( "http://" + ip + "/" + command + ": second success" );
+						console.log("data", data);
+					}).fail(function(data) {
+						console.log( "http://" + ip + "/" + command + ": error" );
+						console.log("data", data);
+					}).always(function(data) {
+						console.log( "http://" + ip + "/" + command + ": finished" );
+						console.log("data", data);
+					});
+				};
+			
+				const ips = [
+					"192.168.200.146",
+					"192.168.200.147",
+					"192.168.200.148",
+					"192.168.200.149",
+					"192.168.200.150",
+					"192.168.200.151"
+				];
+				
+				var doors = [];
+				
+				var counter = 1;
+				$(ips).each(function(){
+					var ip = this;					
+					var card = $('<div class="card text-center"></div>').click(function(event){
+
+						event.preventDefault();
+						$.ajax({
+							url: "http://" + ip + "/wifi"
+						}).then(function(data) {
+							var wifi = $(card).find(".wifi")[0];
+							$(wifi).text(data.wifi);
+							if(data.wifi < -40){
+								$(card_footer).removeClass("bg-success bg-warning bg-danger");
+								$(card_footer).addClass("bg-success");
+							}
+							
+							if(data.wifi < -60){
+								$(card_footer).removeClass("bg-success bg-warning bg-danger");
+								$(card_footer).addClass("bg-warning");
+							}
+							
+							if(data.wifi < -70){
+								$(card_footer).removeClass("bg-success bg-warning bg-danger");
+								$(card_footer).addClass("bg-danger");
+							}
+						});
+						
+						$.ajax({
+							url: "http://" + ip + "/state"
+						}).then(function(data) {
+							var state = $(card).find(".state")[0];
+							$(card_header).removeClass("bg-success bg-warning bg-danger");
+							if(data.return_value == 1){
+								$(state).text("closed");
+								$(card_header).addClass("bg-warning");
+								$(card_button_opendoor).removeClass("disabled");
+								$(card_button_closedoor).addClass("disabled");
+							} else if (data.return_value == 0) {
+								$(state).text("open");
+								$(card_header).addClass("bg-success");
+								$(card_button_opendoor).addClass("disabled");
+								$(card_button_closedoor).removeClass("disabled");
+							} else {
+								$(state).text("unknown");
+								$(card_header).addClass("bg-danger");
+								$(card_button_opendoor).addClass("disabled");
+								$(card_button_closedoor).addClass("disabled");
+							}
+						});
+					});
+					var card_header = $('<div class="card-header bg-danger text-white">Rollerdoor <span class="id">' + counter + '</span></div>').appendTo( card );
+					var card_body = $('<div class="card-body"></div>').appendTo( card );
+					var card_title = $('<h5 class="card-title">Control</h5>').appendTo( card_body );
+					var card_text = $('<p class="card-text">Door is <span class="state">unknown</span></p>').appendTo( card_body );
+					var card_button_opendoor = $('<a href="#" class="btn btn-block btn-secondary opendoor disabled">open</a>').click(function(event){
+						event.preventDefault();
+						restCall(ip, "open");
+					}).appendTo(card_body);
+					var card_button_closedoor = $('<a href="#" class="btn btn-block btn-secondary closedoor disabled">close</a>').click(function(event){
+						event.preventDefault();
+						restCall(ip, "close");
+					}).appendTo(card_body);
+					var card_footer = $('<div class="card-footer bg-success text-white">wifi signal: <span class="wifi">?</span></div>').appendTo( card );
+					
+					$( card ).appendTo( "#card_group" );
+					counter++;
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="wrapper" class="container">
+			<div id="card_group" class="card-group"></div>
+		</div>
+	</body>
+</html>
