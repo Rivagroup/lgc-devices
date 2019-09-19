@@ -12,12 +12,17 @@
 			$(document).ready(function() {
 			
 				class RollerDoor{
+				
+					//ToDo: timeout for preventing motor overheating 5min
+					
 					constructor(ip){
 						(this)._connected = false;
 						(this)._hardware = "";
 						(this)._id = "";
 						(this)._name = "";
 						(this)._ip = ip;
+						(this)._errors = [];
+						(this)._lastCommand = "";
 						(this).updateInformation();
 						(this)._wifi = setInterval((this).updateWifiSignal.bind(this), 1000);
 						(this)._state = setInterval((this).updateState.bind(this), 1000);
@@ -34,6 +39,7 @@
 							self._name = response.name;
 							self._state = response.variables.state;
 							self._wifi = response.variables.wifi;
+							self._lastCommand = response.variables.last;
 						});
 					}
 					
@@ -67,12 +73,46 @@
 						});	
 					}
 					
+					getId() {
+						return (this)._id;
+					}
+					
+					getName() {
+						return (this)._name;
+					}
+					
+					getLastCommand(){
+						return (this)._lastCommand;
+					}
+					
 					getWifi(){
 						return (this)._wifi;
 					}
 					
 					getState(){
 						return (this)._state;
+					}
+					
+					getStateAsWord(){
+						if((this)._state == -1) {
+							return "rolling";
+						}
+						
+						if((this)._state == 0) {
+							return "open";
+						}
+						
+						if((this)._state == 1) {
+							return "closed";
+						}
+					}
+					
+					getErrors(){
+						return (this)._errors;
+					}
+					
+					getHardware() {
+						return (this)._hardware;
 					}
 					
 					getUrl(){
@@ -84,9 +124,52 @@
 					"192.168.200.146"
 				]
 				
-				var rd = new RollerDoor(ips[0]);
+				var doors = [];
 				
-				console.log(rd);
+				$(ips).each(function(){
+					doors.push(new RollerDoor(this));
+				});
+				
+				//print information
+				setTimeout(function(){
+					$(doors).each(function(){
+						var door = this;
+						$('<div class="card" id="' + door.getId() + '"><div class="card-body"><h4 class="card-title">' + door.getName() + '</h4><p class="card-text">WiFi Signal Strength: <span class="wifi">' + door.getWifi() + '</span><br/>Door is <span class="state">rolling</span></p><a href="' + door.getUrl() + 'open" class="btn btn-success btn-block btn-open disable">open</a><a href="' + door.getUrl() + 'close" class="btn btn-danger btn-block btn-close disabled">close</a></div></div>').appendTo("#wrapper");
+						/*
+						console.log("Name: ", door.getName());
+						console.log("Hardware: ", door.getHardware());
+						console.log("Wifi: ", door.getWifi());
+						console.log("State: ", door.getState());
+						console.log("State as word: ", door.getStateAsWord());
+						console.log("last Command: ", door.getLastCommand());
+						console.log("error: ", door.getErrors());
+						*/
+					});
+				},1000);
+				
+				//update information
+				setInterval(function(){
+					$(doors).each(function(){						
+						var door = this;
+						$("#" + door.getId()).find(".wifi").text(door.getWifi());
+						$("#" + door.getId()).find(".state").text(door.getStateAsWord());
+						$("#" + door.getId()).removeClass("bg-warning bg-success bg-danger text-dark text-white");
+						$("#" + door.getId()).find(".btn-open").addClass("disabled");
+						$("#" + door.getId()).find(".btn-close").addClass("disabled");
+						if(door.getState() == -1){
+							$("#" + door.getId()).addClass("bg-warning text-dark");
+						}
+						if(door.getState() == 0){
+							$("#" + door.getId()).addClass("bg-success text-white");
+							$("#" + door.getId()).find(".btn-close").removeClass("disabled");
+						}
+						if(door.getState() == 1){
+							$("#" + door.getId()).addClass("bg-danger text-dark");
+							$("#" + door.getId()).find(".btn-open").removeClass("disabled");
+						}
+					});
+				}, 5000);
+				
 			});
 		</script>
 	</head>
