@@ -37,6 +37,7 @@ aREST rest = aREST();
 int getDoorState();
 int wifiSignalStrength = WiFi.RSSI();
 int doorState = getDoorState();
+char* lastCommand = "";
 
 void setup () {
   //start serial on debug
@@ -85,6 +86,7 @@ void setup () {
   rest.function("close",closeDoor);
   rest.variable("wifi", &wifiSignalStrength);
   rest.variable("state", &doorState);
+  rest.variable("last", &lastCommand);
 };
 
 void loop () {
@@ -111,6 +113,7 @@ void loop () {
  */
 int closeDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, HIGH);
+  lastCommand = "close";
   return 1;
 }
 
@@ -121,6 +124,7 @@ int closeDoor(String command) {
  */
 int openDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, LOW);
+  lastCommand = "open";
   return 1;
 }
 
