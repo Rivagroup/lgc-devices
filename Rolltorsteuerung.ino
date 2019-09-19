@@ -33,8 +33,10 @@ const char* WIFI_PASS = "megaralaserg";
 WiFiServer server(LISTEN_PORT);
 aREST rest = aREST();
 
-//Variables to be exposed to the API
+//exposed vars and funcs
+int getDoorState();
 int wifiSignalStrength = WiFi.RSSI();
+int doorState = getDoorState();
 
 void setup () {
   //start serial on debug
@@ -46,8 +48,8 @@ void setup () {
   pinMode(D3, OUTPUT);
   pinMode(D4, OUTPUT);
   pinMode(D5, OUTPUT); // Relais-Module contro
-  pinMode(D6, INPUT); //Sensor door is up
-  pinMode(D7, INPUT); //Sensor door is down
+  pinMode(D6, INPUT);  //Sensor door is up 0/1
+  pinMode(D7, INPUT);  //Sensor door is down 0/1
   pinMode(D8, OUTPUT);
 
   //set pins to low by default
@@ -79,15 +81,16 @@ void setup () {
   rest.set_id("rd01");
   rest.set_name("rollerDoor01");
   
-  rest.function("open",doorOpen);
-  rest.function("close",doorClose);
-  rest.function("state",doorState);
-  rest.variable("wifi", &wifiSignalStrength); 
+  rest.function("open",openDoor);
+  rest.function("close",closeDoor);
+  rest.variable("wifi", &wifiSignalStrength);
+  rest.variable("state", &doorState);
 };
 
 void loop () {
-  // update wifi signal strength
+  // update variables
   wifiSignalStrength = WiFi.RSSI();
+  doorState = getDoorState();
   
   // Handle REST calls
   WiFiClient client = server.available();
@@ -101,61 +104,42 @@ void loop () {
   }
 };
 
-int doorClose(String command) {
+/*
+ * close door
+ * sets door toggle pin to high
+ * returns integer
+ */
+int closeDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, HIGH);
-  int timeout = 10;
-  int count = 0;
-  int success = 1;
-  while(!getDoorIsDown()){
-    if(count >= timeout){
-      success = 0;
-      break;
-    }
-    count++;
-    delay(1000);
-  }
-  
-  return success;
+  return 1;
 }
 
-int doorOpen(String command) {
+/*
+ * open door
+ * sets door toggle pin to low
+ * returns integer
+ */
+int openDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, LOW);
-  int timeout = 10;
-  int count = 0;
-  int success = 1;
-  while(!getDoorIsUp()){
-    if(count >= timeout){
-      success = 0;
-      break;
-    }
-    count++;
-    delay(1000);
-  }
-  return success;
+  return 1;
 }
 
-int doorState(String command) {
+/*
+ * get door state
+ * -1 = unknown
+ *  0 = open
+ *  1 = closed
+ *  
+ *  returns integer
+ */
+int getDoorState() {
   int result = -1;
   
-  if(getDoorIsDown()){
-    result = 1;
-  }
-
-  if(getDoorIsUp()){
+  if(digitalRead(DOOR_SENSOR_UP_PIN)){
     result = 0;
   }
-  
+  if(digitalRead(DOOR_SENSOR_DOWN_PIN)){
+    result = 1;
+  }
   return result;
-}
-
-int getDoorIsUp(){
-  Serial.print("getDoorIsUp(): ");
-  Serial.println(digitalRead(DOOR_SENSOR_UP_PIN));
-  return digitalRead(DOOR_SENSOR_UP_PIN);
-}
-
-int getDoorIsDown(){
-  Serial.print("getDoorIsDown(): ");
-  Serial.println(digitalRead(DOOR_SENSOR_DOWN_PIN));
-  return digitalRead(DOOR_SENSOR_DOWN_PIN);
 }
