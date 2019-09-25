@@ -37,7 +37,7 @@ aREST rest = aREST();
 int getDoorState();
 int wifiSignalStrength = WiFi.RSSI();
 int doorState = getDoorState();
-char* lastCommand = "";
+int lastCommand = -1;
 
 void setup () {
   //start serial on debug
@@ -48,7 +48,7 @@ void setup () {
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
   pinMode(D4, OUTPUT);
-  pinMode(D5, OUTPUT); // Relais-Module contro
+  pinMode(D5, OUTPUT); //Relais-Module control
   pinMode(D6, INPUT);  //Sensor door is up 0/1
   pinMode(D7, INPUT);  //Sensor door is down 0/1
   pinMode(D8, OUTPUT);
@@ -113,7 +113,7 @@ void loop () {
  */
 int closeDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, HIGH);
-  lastCommand = "close";
+  lastCommand = 1;
   return 1;
 }
 
@@ -124,7 +124,7 @@ int closeDoor(String command) {
  */
 int openDoor(String command) {
   digitalWrite(DOOR_TOGGLE_PIN, LOW);
-  lastCommand = "open";
+  lastCommand = 0;
   return 1;
 }
 

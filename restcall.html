@@ -5,6 +5,163 @@
 		<title>Rolltore RESTful</title>
 		<meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=no">
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<style>
+			@keyframes MOVE-DOWN {
+				from {
+					background-position-y: 0px;
+				}
+				to { 
+					background-position-y: 20px;
+				}
+			}
+			
+			@keyframes DOOR-OPEN {
+				from {
+					background-position-y: 0;
+				}
+				to { 
+					background-position-y: -480px;
+				}
+			}
+			
+			@keyframes DOOR-CLOSE {
+				from {
+					background-position-y: -480px;
+				}
+				to { 
+					background-position-y: 0;
+				}
+			}
+			
+			.bg-striped {
+				background: repeating-linear-gradient(
+					#fff 0,
+					#eee 1px,
+					#ddd 19px,
+					#aaa 20px
+				);
+				background-repeat: repeat-y;
+				background-attachment: scroll;
+			}
+			
+			.bg-closing {
+				background-color: #6c757d;
+				background-image: linear-gradient(
+					#fff 0,
+					#eee 1px,
+					#ddd 18px,
+					#aaa 19px,
+					#fff 20px,
+					#eee 21px,
+					#ddd 38px,
+					#aaa 39px,
+					#fff 40px,
+					#eee 41px,
+					#ddd 58px,
+					#aaa 59px,
+					#fff 60px,
+					#eee 61px,
+					#ddd 78px,
+					#aaa 79px,
+					#fff 80px,
+					#eee 81px,
+					#ddd 98px,
+					#aaa 99px,
+					#fff 100px,
+					#eee 101px,
+					#ddd 118px,
+					#aaa 119px,
+					#fff 120px,
+					#eee 121px,
+					#ddd 138px,
+					#aaa 139px,
+					#fff 140px,
+					#eee 141px,
+					#ddd 158px,
+					#aaa 159px,
+					#fff 160px,
+					#eee 161px,
+					#ddd 178px,
+					#aaa 179px,
+					#6c757d 180px,
+					#6c757d 480px
+				);
+				background-repeat: no-repeat;
+				
+				animation-name: DOOR-CLOSE;
+				animation-duration: 5s;
+				animation-timing-function: linear;
+				animation-iteration-count: 1;
+				animation-fill-mode: forwards;
+			}
+			
+			.bg-opening {
+				background-color: #6c757d;
+				background-image: linear-gradient(
+					#fff 0,
+					#eee 1px,
+					#ddd 18px,
+					#aaa 19px,
+					#fff 20px,
+					#eee 21px,
+					#ddd 38px,
+					#aaa 39px,
+					#fff 40px,
+					#eee 41px,
+					#ddd 58px,
+					#aaa 59px,
+					#fff 60px,
+					#eee 61px,
+					#ddd 78px,
+					#aaa 79px,
+					#fff 80px,
+					#eee 81px,
+					#ddd 98px,
+					#aaa 99px,
+					#fff 100px,
+					#eee 101px,
+					#ddd 118px,
+					#aaa 119px,
+					#fff 120px,
+					#eee 121px,
+					#ddd 138px,
+					#aaa 139px,
+					#fff 140px,
+					#eee 141px,
+					#ddd 158px,
+					#aaa 159px,
+					#fff 160px,
+					#eee 161px,
+					#ddd 178px,
+					#aaa 179px,
+					#6c757d 180px,
+					#6c757d 480px
+				);
+				background-repeat: no-repeat;
+				
+				animation-name: DOOR-OPEN;
+				animation-duration: 5s;
+				animation-timing-function: linear;
+				animation-iteration-count: 1;
+				animation-fill-mode: forwards;
+			}
+
+			.bg-scroll-down{
+				animation-name: MOVE-DOWN;
+				animation-duration: 1s;
+				animation-timing-function: linear;
+				animation-iteration-count: infinite;
+			}
+
+			.bg-scroll-up{
+				animation-name: MOVE-DOWN;
+				animation-duration: 1s;
+				animation-timing-function: linear;
+				animation-iteration-count: infinite;
+				animation-direction: reverse;
+			}
+
+		</style>
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -24,8 +181,7 @@
 						(this)._errors = [];
 						(this)._lastCommand = "";
 						(this).updateInformation();
-						(this)._wifi = setInterval((this).updateWifiSignal.bind(this), 1000);
-						(this)._state = setInterval((this).updateState.bind(this), 1000);
+						setInterval((this).updateInformation.bind(this), 1000);
 					}
 					
 					updateInformation(){
@@ -94,8 +250,19 @@
 					}
 					
 					getStateAsWord(){
+						var lastCommand = (this)._lastCommand;
 						if((this)._state == -1) {
-							return "rolling";
+							if(lastCommand == -1) {
+								return "rolling";
+							}
+							
+							if(lastCommand == 0 ) {
+								return "opening";
+							} 
+							
+							if(lastCommand == 1) {
+								return "closing";
+							}
 						}
 						
 						if((this)._state == 0) {
@@ -104,6 +271,20 @@
 						
 						if((this)._state == 1) {
 							return "closed";
+						}
+					}
+					
+					getLastCommandAsWord(){
+						if((this)._lastCommand == -1) {
+							return "none";
+						}
+						
+						if((this)._lastCommand == 0) {
+							return "open";
+						}
+						
+						if((this)._lastCommand == 1) {
+							return "close";
 						}
 					}
 					
@@ -134,39 +315,56 @@
 				setTimeout(function(){
 					$(doors).each(function(){
 						var door = this;
-						$('<div class="card" id="' + door.getId() + '"><div class="card-body"><h4 class="card-title">' + door.getName() + '</h4><p class="card-text">WiFi Signal Strength: <span class="wifi">' + door.getWifi() + '</span><br/>Door is <span class="state">rolling</span></p><a href="' + door.getUrl() + 'open" class="btn btn-success btn-block btn-open disable">open</a><a href="' + door.getUrl() + 'close" class="btn btn-danger btn-block btn-close disabled">close</a></div></div>').appendTo("#wrapper");
-						/*
-						console.log("Name: ", door.getName());
-						console.log("Hardware: ", door.getHardware());
-						console.log("Wifi: ", door.getWifi());
-						console.log("State: ", door.getState());
-						console.log("State as word: ", door.getStateAsWord());
-						console.log("last Command: ", door.getLastCommand());
-						console.log("error: ", door.getErrors());
-						*/
+						$('<div class="card d-none text-center" id="' + door.getId() + '"><div class="card-header"><h2>' + door.getName() + '</h2></div><div class="card-body bg-secondary text-light"><h5 class="card-title">Door is <span class="state">stuck</span></h5><p class="card-text"></p><a href="' + door.getUrl() + 'open" class="btn btn-secondary btn-block btn-open disable">open</a><a href="' + door.getUrl() + 'close" class="btn btn-light btn-block btn-close disabled">close</a></div><div class="card-footer text-muted">WiFi: <span class="wifi">' + door.getWifi() + '</span> | last command: <span class="command"></span></div></div>').appendTo(".card-deck");
 					});
-				},1000);
+				},500);
 				
 				//update information
 				setInterval(function(){
+					$(".loading").removeClass("d-none");
+					$(".card").addClass("d-none");
 					$(doors).each(function(){						
 						var door = this;
 						$("#" + door.getId()).find(".wifi").text(door.getWifi());
 						$("#" + door.getId()).find(".state").text(door.getStateAsWord());
-						$("#" + door.getId()).removeClass("bg-warning bg-success bg-danger text-dark text-white");
+						$("#" + door.getId()).find(".command").text(door.getLastCommandAsWord());
+						$("#" + door.getId()).find(".card-body").removeClass("bg-warning bg-success bg-danger bg-secondary bg-opening bg-closing bg-dark bg-light text-dark text-white text-warning bg-striped bg-scroll-up bg-scroll-down");
+						$("#" + door.getId()).find("a.btn").click(function(event){
+							event.preventDefault();
+							var cUrl = $(this).attr('href');
+							$.ajax({
+								url: cUrl
+							});	
+						});
+						
 						$("#" + door.getId()).find(".btn-open").addClass("disabled");
 						$("#" + door.getId()).find(".btn-close").addClass("disabled");
-						if(door.getState() == -1){
-							$("#" + door.getId()).addClass("bg-warning text-dark");
+						
+						var state = door.getState();
+						if(state == -1){
+							var lastCommand = door.getLastCommand();
+							if(lastCommand == -1) {
+								$("#" + door.getId()).find(".card-body").addClass("bg-danger text-warning");
+							}
+							
+							if(lastCommand == 0) {
+								$("#" + door.getId()).find(".card-body").addClass("bg-striped bg-scroll-up text-dark");
+							}
+							
+							if(lastCommand == 1) {
+								$("#" + door.getId()).find(".card-body").addClass("bg-striped bg-scroll-down text-dark");
+							}
 						}
-						if(door.getState() == 0){
-							$("#" + door.getId()).addClass("bg-success text-white");
+						if(state == 0){
+							$("#" + door.getId()).find(".card-body").addClass("bg-opening text-light")
 							$("#" + door.getId()).find(".btn-close").removeClass("disabled");
 						}
-						if(door.getState() == 1){
-							$("#" + door.getId()).addClass("bg-danger text-dark");
+						if(state == 1){
+							$("#" + door.getId()).find(".card-body").addClass("bg-striped text-dark");
 							$("#" + door.getId()).find(".btn-open").removeClass("disabled");
 						}
+						$(".loading").addClass("d-none");
+						$("#" + door.getId()).removeClass("d-none");
 					});
 				}, 5000);
 				
@@ -175,6 +373,9 @@
 	</head>
 	<body>
 		<div id="wrapper" class="container">
+			<p class="text-center loading">... LOADING ...</p>
+			<div class="card-deck">
+			</div>
 			
 		</div>
 	</body>
